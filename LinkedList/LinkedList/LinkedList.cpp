@@ -87,5 +87,15 @@ template<typename T> void LinkedList<T>::prettyPrint(ostream& out)
 	out << endl;
 }
 
+template<typename T> void LinkedList<T>::forEach(void (*alter)(T&))
+{
+	Node<T>* walk = root;
+	while (walk->next != nullptr)
+	{
+		(*alter)(walk->value);
+		walk = walk->next;
+	}
+}
+
 // You can find more about this last line in the project description (README.md)
 template class LinkedList<int>;

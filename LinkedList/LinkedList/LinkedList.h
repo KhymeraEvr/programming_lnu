@@ -26,4 +26,6 @@ public:
 	bool contains(T value);
 
 	void prettyPrint(ostream& out);
+
+	void forEach(void (*alter)(T&));
 };
