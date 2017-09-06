@@ -24,6 +24,7 @@ public:
 	void add(T value);
 	void remove(T searchedValue);
 	bool contains(T value);
+	bool equals(LinkedList&);
 
 	void prettyPrint(ostream& out);
 

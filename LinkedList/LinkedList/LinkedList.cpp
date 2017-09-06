@@ -68,6 +68,29 @@ template<typename T> bool LinkedList<T>::contains(T value)
 	return false;
 }
 
+template<typename T> bool LinkedList<T>::equals(LinkedList& anotherList)
+{
+	Node<T>* first = this->root;
+	Node<T>* second = anotherList.root;
+
+	while (first->next != nullptr && second->next != nullptr)
+	{
+		if (first->value != second->value)
+		{
+			return false;
+		}
+		first = first->next;
+		second = second->next;
+	}
+
+	if (first->next == second->next)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 template<typename T> void LinkedList<T>::prettyPrint(ostream& out)
 {
 	if (root->next == nullptr)
