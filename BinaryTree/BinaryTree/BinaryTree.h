@@ -118,55 +118,9 @@ private:
 
 #pragma region _PRETTY_PRINT_
 
-	void printNodes(Node<T>* node, ostream& out)
-	{
-		if (node == nullptr)
-		{
-			return;
-		}
-
-		out << "\t(value:  " << node->value << "\tshift: " << node->shift << ")" << endl;
-		printNodes(node->left, out);
-		printNodes(node->right, out);
-	}
-
-	void calculateNodeShift(Node<T>* node, int direction, int parrentShift)
-	{
-		if (node == nullptr)
-		{
-			return;
-		}
-
-		node->shift = direction + parrentShift;
-		calculateNodeShift(node->left, -1, node->shift);
-		calculateNodeShift(node->right, 1, node->shift);
-	}
-
-	void addShiftToEachNode(Node<T>* node, int shift)
-	{
-		if (node == nullptr)
-		{
-			return;
-		}
-
-		node->shift += shift;
-		addShiftToEachNode(node->left, shift);
-		addShiftToEachNode(node->right, shift);
-	}
-
-	void positionLeftNodeToAbsoluteZero()
-	{
-		Node<T>* leftNode = root;
-		while (leftNode->left != nullptr)
-		{
-			leftNode = leftNode->left;
-		}
-
-		addShiftToEachNode(root, -leftNode->shift);
-	}
-
 	Node<T>* rightNode(Node<T>* node)
 	{
+		// FIXME: this method is not returning the most 'right' node
 		while (node->right != nullptr)
 		{
 			node = node->right;
@@ -184,6 +138,33 @@ private:
 		return node;
 	}
 
+	void calculateNodeShift(Node<T>* node, int direction, int parrentShift)
+	{
+		if (node == nullptr)
+		{
+			return;
+		}
+		node->shift = direction + parrentShift;
+		calculateNodeShift(node->left, -1, node->shift);
+		calculateNodeShift(node->right, 1, node->shift);
+	}
+
+	void addShiftToEachNode(Node<T>* node, int shift)
+	{
+		if (node == nullptr)
+		{
+			return;
+		}
+		node->shift += shift;
+		addShiftToEachNode(node->left, shift);
+		addShiftToEachNode(node->right, shift);
+	}
+
+	void positionLeftNodeToAbsoluteZero()
+	{
+		addShiftToEachNode(root, -leftNode(root)->shift);
+	}
+
 	void fixNodeColisions(Node<T>* parrentNode, Node<T>* node, NodeType nodeType)
 	{
 		if (node->left == nullptr && node->right == nullptr)
@@ -196,7 +177,6 @@ private:
 			{
 				node->shift++;
 			}
-
 			return;
 		}
 		if (node->left != nullptr)
@@ -215,20 +195,18 @@ private:
 		}
 		else if (nodeType == NodeType::LEFT)
 		{
-			Node<T>* _rightNode = rightNode(node);
-
-			if (parrentNode->shift <= _rightNode->shift)
+			Node<T>* rightNode = this->rightNode(node);
+			if (parrentNode->shift <= rightNode->shift)
 			{
-				addShiftToEachNode(node, -(_rightNode->shift - parrentNode->shift + 1));
+				addShiftToEachNode(node, -(rightNode->shift - parrentNode->shift + 1));
 			}
 		}
 		else
 		{
-			Node<T>* _leftNode = leftNode(node);
-
-			if (parrentNode->shift >= _leftNode->shift)
+			Node<T>* leftNode = this->leftNode(node);
+			if (parrentNode->shift >= leftNode->shift)
 			{
-				addShiftToEachNode(node, parrentNode->shift - _leftNode->shift + 1);
+				addShiftToEachNode(node, parrentNode->shift - leftNode->shift + 1);
 			}
 		}
 	}
