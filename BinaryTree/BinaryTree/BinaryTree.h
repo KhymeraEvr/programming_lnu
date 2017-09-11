@@ -56,6 +56,56 @@ private:
 		}
 	}
 
+	Node<T>* findMin(Node<T>* node)
+	{
+		while (node->left != nullptr)
+		{
+			node = node->left;
+		}
+		return node;
+	}
+
+	Node<T>* remove(Node<T>* node, int value) {
+		if (node == nullptr)
+		{
+			return node;
+		}
+		else if (value < node->value)
+		{
+			node->left = remove(node->left, value);
+		}
+		else if (value > node->value)
+		{
+			node->right = remove(node->right, value);
+		}
+		else
+		{
+			if (node->left == nullptr && node->right == nullptr) {
+				delete node;
+				node = nullptr;
+			}
+			else if (node->left == nullptr)
+			{
+				Node<T> *temp = node;
+				node = node->right;
+				delete temp;
+			}
+			else if (node->right == nullptr)
+			{
+				Node<T>* temp = node;
+				node = node->left;
+				delete temp;
+			}
+			else
+			{
+				Node<T>* temp = findMin(node->right);
+				node->value = temp->value;
+				node->right = remove(node->right, temp->value);
+			}
+		}
+		return node;
+	}
+
 	void removeSubtree(Node<T>* node)
 	{
 		if (node != nullptr)
@@ -158,7 +208,7 @@ private:
 			fixNodeColisions(node, node->right, NodeType::RIGHT);
 		}
 
-		
+
 		if (nodeType == NodeType::ROOT)
 		{
 			return;
@@ -192,7 +242,7 @@ private:
 		{
 			nodes->clear();
 		}
-		
+
 		if (currentLevel == level)
 		{
 			nodes->push_back(node);
@@ -240,12 +290,17 @@ public:
 		}
 	}
 
+	void remove(int value)
+	{
+		remove(root, value);
+	}
+
 	void prettyPrint(ostream& out)
 	{
 		calculateNodeShift(root, 0, 0);
 		fixNodeColisions(nullptr, root, NodeType::ROOT);
 		positionLeftNodeToAbsoluteZero();
-		
+
 		for (int i = 0; true ; i++)
 		{
 			list<Node<T>*>* nodesOnLevel = getNodesOnLevel(root, i, true);
@@ -254,7 +309,7 @@ public:
 			{
 				return;
 			}
-			
+
 			int horizontalIndex = 0;
 			for each (Node<T>* node in *nodesOnLevel)
 			{
