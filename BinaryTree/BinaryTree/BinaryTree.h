@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 #include <conio.h>
 #include <list>
 
@@ -28,6 +29,11 @@ enum NodeType
 template<typename T> class BinaryTree
 {
 private:
+	const char FILLER = ' ';
+	const char UNDERLINE = '_';
+	const char LEFT_BRANCH = '/';
+	const char RIGHT_BRANCH = '\\';
+
 	Node<T>* root;
 
 	void add(Node<T>* node, T value)
@@ -279,7 +285,7 @@ public:
 		fixNodeColisions(nullptr, root, NodeType::ROOT);
 		positionLeftNodeToAbsoluteZero();
 
-		for (int i = 0; true ; i++)
+		for (int i = 0; true; i++)
 		{
 			list<Node<T>*>* nodesOnLevel = getNodesOnLevel(root, i, true);
 
@@ -291,13 +297,74 @@ public:
 			int horizontalIndex = 0;
 			for each (Node<T>* node in *nodesOnLevel)
 			{
-				while (horizontalIndex < node->shift)
+				if (node->left != nullptr)
 				{
-					out << " ";
-					horizontalIndex++;
+					while (horizontalIndex <= node->left->shift)
+					{
+						out << FILLER;
+						horizontalIndex++;
+					}
+
+					while (horizontalIndex < node->shift)
+					{
+						out << UNDERLINE;
+						horizontalIndex++;
+					}
 				}
+				else
+				{
+					while (horizontalIndex < node->shift)
+					{
+						out << FILLER;
+						horizontalIndex++;
+					}
+				}
+
 				out << node->value;
-				horizontalIndex++;
+				horizontalIndex += std::to_string(node->value).length();
+
+				if (node->right != nullptr)
+				{
+					while (horizontalIndex < node->right->shift)
+					{
+						out << UNDERLINE;
+						horizontalIndex++;
+					}
+				}
+			}
+			out << endl;
+
+			int _horizontalIndex = 0;
+			for each (Node<T>* node in *nodesOnLevel)
+			{
+				if (node->left != nullptr)
+				{
+					while (_horizontalIndex < node->left->shift)
+					{
+						out << FILLER;
+						_horizontalIndex++;
+					}
+					out << LEFT_BRANCH;
+					_horizontalIndex++;
+				}
+				else
+				{
+					while (_horizontalIndex < node->shift)
+					{
+						out << FILLER;
+						_horizontalIndex++;
+					}
+				}
+				if (node->right != nullptr)
+				{
+					while (_horizontalIndex < node->right->shift)
+					{
+						out << FILLER;
+						_horizontalIndex++;
+					}
+					out << RIGHT_BRANCH;
+					_horizontalIndex++;
+				}
 			}
 			out << endl;
 		}
