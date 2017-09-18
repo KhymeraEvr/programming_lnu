@@ -1,5 +1,4 @@
 #include <iostream>
-#include <conio.h>
 
 #include "BinaryTree.h"
 
@@ -20,6 +19,5 @@ int main()
 
 	tree->prettyPrint(cout);
 
-	_getch();
 	return 0;
 }

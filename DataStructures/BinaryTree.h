@@ -2,22 +2,9 @@
 
 #include <iostream>
 #include <string>
-#include <conio.h>
 #include <list>
 
 using namespace std;
-
-template<typename T> struct Node
-{
-	T value;
-	int shift;
-	Node<T>* left;
-	Node<T>* right;
-
-	Node<T>(int value) : value(value), left(nullptr), right(nullptr), shift(0)
-	{
-	}
-};
 
 enum NodeType
 {
@@ -29,20 +16,32 @@ enum NodeType
 template<typename T> class BinaryTree
 {
 private:
+	struct Node
+	{
+		T value;
+		int shift;
+		Node* left;
+		Node* right;
+
+		Node(int value) : value(value), left(nullptr), right(nullptr), shift(0)
+		{
+		}
+	};
+
 	const char FILLER = ' ';
 	const char UNDERLINE = '_';
 	const char LEFT_BRANCH = '/';
 	const char RIGHT_BRANCH = '\\';
 
-	Node<T>* root;
+	Node* root;
 
-	void add(Node<T>* node, T value)
+	void add(Node* node, T value)
 	{
 		if (value > node->value)
 		{
 			if (node->right == nullptr)
 			{
-				node->right = new Node<T>(value);
+				node->right = new Node(value);
 			}
 			else
 			{
@@ -53,7 +52,7 @@ private:
 		{
 			if (node->left == nullptr)
 			{
-				node->left = new Node<T>(value);
+				node->left = new Node(value);
 			}
 			else
 			{
@@ -62,7 +61,7 @@ private:
 		}
 	}
 
-	Node<T>* findMin(Node<T>* node)
+	Node* findMin(Node* node)
 	{
 		while (node->left != nullptr)
 		{
@@ -71,7 +70,7 @@ private:
 		return node;
 	}
 
-	Node<T>* remove(Node<T>* node, int value) {
+	Node* remove(Node* node, int value) {
 		if (node == nullptr)
 		{
 			return node;
@@ -92,19 +91,19 @@ private:
 			}
 			else if (node->left == nullptr)
 			{
-				Node<T> *temp = node;
+				Node *temp = node;
 				node = node->right;
 				delete temp;
 			}
 			else if (node->right == nullptr)
 			{
-				Node<T>* temp = node;
+				Node* temp = node;
 				node = node->left;
 				delete temp;
 			}
 			else
 			{
-				Node<T>* temp = findMin(node->right);
+				Node* temp = findMin(node->right);
 				node->value = temp->value;
 				node->right = remove(node->right, temp->value);
 			}
@@ -112,7 +111,7 @@ private:
 		return node;
 	}
 
-	void removeSubtree(Node<T>* node)
+	void removeSubtree(Node* node)
 	{
 		if (node != nullptr)
 		{
@@ -124,7 +123,7 @@ private:
 
 #pragma region _PRETTY_PRINT_
 
-	Node<T>* rightNode(Node<T>* node)
+	Node* rightNode(Node* node)
 	{
 		// FIXME: this method is not returning the most 'right' node
 		while (node->right != nullptr)
@@ -134,7 +133,7 @@ private:
 		return node;
 	}
 
-	Node<T>* leftNode(Node<T>* node)
+	Node* leftNode(Node* node)
 	{
 		// FIXME: this method is not returning the most 'left' node
 		while (node->left != nullptr)
@@ -144,7 +143,7 @@ private:
 		return node;
 	}
 
-	void calculateNodeShift(Node<T>* node, int direction, int parrentShift)
+	void calculateNodeShift(Node* node, int direction, int parrentShift)
 	{
 		if (node == nullptr)
 		{
@@ -155,7 +154,7 @@ private:
 		calculateNodeShift(node->right, 1, node->shift);
 	}
 
-	void addShiftToEachNode(Node<T>* node, int shift)
+	void addShiftToEachNode(Node* node, int shift)
 	{
 		if (node == nullptr)
 		{
@@ -171,7 +170,7 @@ private:
 		addShiftToEachNode(root, -leftNode(root)->shift);
 	}
 
-	void fixNodeColisions(Node<T>* parrentNode, Node<T>* node, NodeType nodeType)
+	void fixNodeColisions(Node* parrentNode, Node* node, NodeType nodeType)
 	{
 		if (node->left == nullptr && node->right == nullptr)
 		{
@@ -201,7 +200,7 @@ private:
 		}
 		else if (nodeType == NodeType::LEFT)
 		{
-			Node<T>* rightNode = this->rightNode(node);
+			Node* rightNode = this->rightNode(node);
 			if (parrentNode->shift <= rightNode->shift)
 			{
 				addShiftToEachNode(node, -(rightNode->shift - parrentNode->shift + 1));
@@ -209,7 +208,7 @@ private:
 		}
 		else
 		{
-			Node<T>* leftNode = this->leftNode(node);
+			Node* leftNode = this->leftNode(node);
 			if (parrentNode->shift >= leftNode->shift)
 			{
 				addShiftToEachNode(node, parrentNode->shift - leftNode->shift + 1);
@@ -217,9 +216,9 @@ private:
 		}
 	}
 
-	list<Node<T>*>* getNodesOnLevel(Node<T>* node, int level, bool isFirstInvocation)
+	list<Node*>* getNodesOnLevel(Node* node, int level, bool isFirstInvocation)
 	{
-		static list<Node<T>*>* nodes = new list<Node<T>*>();
+		static list<Node*>* nodes = new list<Node*>();
 		static int currentLevel = 0;
 
 		if (isFirstInvocation)
@@ -266,7 +265,7 @@ public:
 	{
 		if (root == nullptr)
 		{
-			root = new Node<T>(value);
+			root = new Node(value);
 		}
 		else
 		{
@@ -287,7 +286,7 @@ public:
 
 		for (int i = 0; true; i++)
 		{
-			list<Node<T>*>* nodesOnLevel = getNodesOnLevel(root, i, true);
+			list<struct Node*>* nodesOnLevel = getNodesOnLevel(root, i, true);
 
 			if (nodesOnLevel->size() == 0)
 			{
@@ -295,7 +294,7 @@ public:
 			}
 
 			int horizontalIndex = 0;
-			for each (Node<T>* node in *nodesOnLevel)
+			for (Node* node : *nodesOnLevel)
 			{
 				if (node->left != nullptr)
 				{
@@ -335,7 +334,7 @@ public:
 			out << endl;
 
 			int _horizontalIndex = 0;
-			for each (Node<T>* node in *nodesOnLevel)
+			for (Node* node : *nodesOnLevel)
 			{
 				if (node->left != nullptr)
 				{
