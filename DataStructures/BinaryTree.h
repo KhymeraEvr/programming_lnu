@@ -16,6 +16,11 @@ enum NodeType
 template<typename T> class BinaryTree
 {
 private:
+	static const char FILLER = ' ';
+	static const char UNDERLINE = '_';
+	static const char LEFT_BRANCH = '/';
+	static const char RIGHT_BRANCH = '\\';
+
 	struct Node
 	{
 		T value;
@@ -27,11 +32,6 @@ private:
 		{
 		}
 	};
-
-	const char FILLER = ' ';
-	const char UNDERLINE = '_';
-	const char LEFT_BRANCH = '/';
-	const char RIGHT_BRANCH = '\\';
 
 	Node* root;
 
