@@ -170,7 +170,7 @@ private:
 		addShiftToEachNode(root, -leftNode(root)->shift);
 	}
 
-	void fixNodeColisions(Node* parrentNode, Node* node, NodeType nodeType)
+	void fixNodeCollisions(Node* parentNode, Node* node, NodeType nodeType)
 	{
 		if (node->left == nullptr && node->right == nullptr)
 		{
@@ -186,11 +186,11 @@ private:
 		}
 		if (node->left != nullptr)
 		{
-			fixNodeColisions(node, node->left, NodeType::LEFT);
+			fixNodeCollisions(node, node->left, NodeType::LEFT);
 		}
 		if (node->right != nullptr)
 		{
-			fixNodeColisions(node, node->right, NodeType::RIGHT);
+			fixNodeCollisions(node, node->right, NodeType::RIGHT);
 		}
 
 
@@ -201,17 +201,17 @@ private:
 		else if (nodeType == NodeType::LEFT)
 		{
 			Node* rightNode = this->rightNode(node);
-			if (parrentNode->shift <= rightNode->shift)
+			if (parentNode->shift <= rightNode->shift)
 			{
-				addShiftToEachNode(node, -(rightNode->shift - parrentNode->shift + 1));
+				addShiftToEachNode(node, -(rightNode->shift - parentNode->shift + 1));
 			}
 		}
 		else
 		{
 			Node* leftNode = this->leftNode(node);
-			if (parrentNode->shift >= leftNode->shift)
+			if (parentNode->shift >= leftNode->shift)
 			{
-				addShiftToEachNode(node, parrentNode->shift - leftNode->shift + 1);
+				addShiftToEachNode(node, parentNode->shift - leftNode->shift + 1);
 			}
 		}
 	}
@@ -281,7 +281,7 @@ public:
 	void prettyPrint(ostream& out)
 	{
 		calculateNodeShift(root, 0, 0);
-		fixNodeColisions(nullptr, root, NodeType::ROOT);
+		fixNodeCollisions(nullptr, root, NodeType::ROOT);
 		positionLeftNodeToAbsoluteZero();
 
 		for (int i = 0; true; i++)
