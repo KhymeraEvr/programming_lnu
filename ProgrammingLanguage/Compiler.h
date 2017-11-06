@@ -4,24 +4,33 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
+#include <stack>
 #include <utility>
 #include <vector>
+#include <map>
+#include <list>
 
 using namespace std;
 
 class Compiler
 {
 private:
-	struct Token
+	struct Command
 	{
-		string value;
+		string op;
+		string first;
+		string second;
+		string third;
 
-		Token(string value) : value(std::move(value))
+		Command(string op, string first, string second = "", string third = "")
+				: op(move(op)), first(move(first)), second(move(second)), third(move(third))
 		{
 		}
 	};
 
 	typedef string::iterator stringIt;
+	typedef vector<string>::iterator tokenIt;
 
 	vector<char> lexemes =
 	{
@@ -30,14 +39,49 @@ private:
 			'}', '[', ']',
 	};
 
-	bool isLexeme(char symbol);
+	int lineIndex = 0;
+	int tempCount = 0;
+
+	list<Command> result;
+
+	stack<string> args;
+	stack<string> operators;
+
+	map<string, string> numberOperator {
+			{"+", "ADD"},
+			{"-", "SUB"},
+			{"*", "MUL"},
+			{"/", "DIV"},
+	};
+
+	map<string, int> priority {
+			{"+", 1},
+			{"-", 1},
+			{"*", 2},
+			{"/", 2},
+	};
+
 
 	void removeWhitespaces(string& code);
 
-	vector<Token>* tokenize(string& code);
+	vector<string>* tokenize(string& code);
 
-	string compile(vector<Token>* tokens);
+	void handleBlock(tokenIt begin, tokenIt end);
+
+	string handleExpression(tokenIt begin, tokenIt end, const string& lastVariable = "");
+
+	void generateCommand();
+
+	void addCommand(Command command);
+
+	bool isLexeme(char symbol);
+
+	bool isNumberOrVariable(const string& variable);
+
+	bool isOperator(string& token);
+
 public:
+
 	string compile(string code);
 };
 
