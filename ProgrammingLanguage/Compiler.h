@@ -42,12 +42,12 @@ private:
 	int lineIndex = 0;
 	int tempCount = 0;
 
-	list<Command> result;
+	vector<Command> result;
 
 	stack<string> args;
 	stack<string> operators;
 
-	map<string, string> numberOperator {
+	map<string, string> numberCommand {
 			{"+", "ADD"},
 			{"-", "SUB"},
 			{"*", "MUL"},
@@ -79,6 +79,8 @@ private:
 	bool isNumberOrVariable(const string& variable);
 
 	bool isOperator(string& token);
+	
+	tokenIt getTokenFrom(tokenIt it, string terminator);
 
 public:
 

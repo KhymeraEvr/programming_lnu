@@ -62,6 +62,8 @@ vector<string>* Compiler::tokenize(string& code)
 
 void Compiler::handleBlock(tokenIt begin, tokenIt end)
 {
+	static int innerFunc = 0;
+
 	for (auto it = begin; it != end; ++it)
 	{
 		string tokenValue = *it;
@@ -72,24 +74,62 @@ void Compiler::handleBlock(tokenIt begin, tokenIt end)
 			it += 2;
 			transform(tokenValue.begin(), tokenValue.end(), tokenValue.begin(), ::toupper);
 			addCommand(Command(tokenValue, *it));
-			++it;
 		}
 		else if (*(it + 1) == "=")
 		{
-			auto endExpression = it;
-			while (*endExpression != ";")
-			{
-				++endExpression;
-			}
-
+			auto endExpression = getTokenFrom(it, ";");
 			handleExpression(it + 2, endExpression, *it);
 			it = endExpression;
+		}
+		else if (tokenValue == "if")
+		{
+			string resultVariable = handleExpression(it + 2, getTokenFrom(it, "]"));
+
+			int beginIfIndex = lineIndex;
+
+			it = getTokenFrom(it, "{") + 1;
+			auto endBlock = getTokenFrom(it, "}");
+			
+			innerFunc++;
+			handleBlock(it, endBlock);
+			innerFunc--;
+
+			result.insert(result.begin() + beginIfIndex, Command("GOTOIFNOT", resultVariable, to_string(lineIndex + 1)));
+			lineIndex++;
+			it = endBlock;
+		}
+		else if (tokenValue == "while")
+		{
+			auto endExpression = getTokenFrom(it, "]");
+
+			string resultVariable = handleExpression(it + 2, endExpression);
+
+			it = endExpression;
+			auto endBlock = getTokenFrom(it, "}");
+
+			int beginWhileIndex = lineIndex;
+
+			handleBlock(it + 2, endBlock);
+
+			result.insert(result.begin() + beginWhileIndex, Command("GOTOIFNOT", resultVariable, to_string(lineIndex + 2)));
+			lineIndex++;
+
+			addCommand(Command("GOTO", to_string(beginWhileIndex)));
+
+			it = endBlock;
 		}
 	}
 }
 
 string Compiler::handleExpression(Compiler::tokenIt begin, Compiler::tokenIt end, const string& lastVariable)
 {
+	if (distance(begin, end) == 1)
+	{
+		string resultVariable = lastVariable.empty() ? "t" + to_string(tempCount++) : lastVariable;
+		addCommand(Command("COPY", *begin, resultVariable));
+		return lastVariable;
+	}
+
 	for (auto it = begin; it != end; ++it)
 	{
 		string token = *it;
@@ -129,7 +169,7 @@ string Compiler::handleExpression(Compiler::tokenIt begin, Compiler::tokenIt end
 		generateCommand();
 	}
 
-	Command lastCommand = result.back();
+	Command& lastCommand = result.back();
 	if (!lastVariable.empty())
 	{
 		lastCommand.third = lastVariable;
@@ -145,7 +185,7 @@ void Compiler::generateCommand()
 	string lhs = args.top(); args.pop();
 
 	string resultVariable = "t" + to_string(tempCount++);
-	addCommand(Command(numberOperator[op], lhs, rhs, resultVariable));
+	addCommand(Command(numberCommand[op], lhs, rhs, resultVariable));
 	args.push(resultVariable);
 }
 
@@ -185,5 +225,15 @@ bool Compiler::isNumberOrVariable(const string& value)
 
 bool Compiler::isOperator(string& token)
 {
-	return numberOperator.count(token) == 1;
+	return numberCommand.count(token) == 1;
+}
+
+Compiler::tokenIt Compiler::getTokenFrom(Compiler::tokenIt it, string terminator)
+{
+	int shift = 1;
+	while (*(it + shift) != terminator)
+	{
+		shift++;
+	}
+	return it + shift;
 }
