@@ -1,0 +1,21 @@
+read> a;
+
+x = 1;
+n = 10;
+
+while [n] {
+    asd = 1;
+    if [asd] {
+        asd = 2;
+        asd = 3;
+    }
+
+    if [asd]
+    {
+    }
+
+    x = 0.5 * (x + a / x);
+    n = n - 1;
+}
+
+write > x;
