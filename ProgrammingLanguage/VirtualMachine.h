@@ -34,8 +34,6 @@ private:
 							"WRITE",
 							[this](vector<string> params)
 							{
-								// not sure how to write param
-								// write or writeln?
 								cout << getVariable(params[0]) << endl;
 							}
 					},
@@ -79,8 +77,7 @@ private:
 							"GOTO",
 							[this](vector<string> params)
 							{
-								// not sure if steps are indexed from zero or one
-								stepIndex = stoi(params[0]) - 2;
+								stepIndex = stoi(params[0]) - 1;
 							}
 					},
 					{
@@ -90,7 +87,7 @@ private:
 								double variable = getVariable(params[0]);
 								if (variable != 0)
 								{
-									stepIndex = stoi(params[1]) - 2;
+									stepIndex = stoi(params[1]) - 1;
 								}
 							}
 					},
@@ -101,7 +98,7 @@ private:
 								double variable = getVariable(params[0]);
 								if (variable == 0)
 								{
-									stepIndex = stoi(params[1]) - 2;
+									stepIndex = stoi(params[1]) - 1;
 								}
 							}
 					},
