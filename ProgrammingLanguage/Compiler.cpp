@@ -6,30 +6,11 @@ string Compiler::compile(string code)
 
 	removeWhitespaces(code);
 
-	auto tokens = tokenize(code);
+	tokenize(code);
 
-	handleBlock(tokens->begin(), tokens->end());
+	handleBlock(0, tokens.size());
 
-	delete tokens;
-
-	stringstream _result;
-
-	for (Command& command : result)
-	{
-		_result << command.op << ' ' << command.first;
-		if (!command.second.empty())
-		{
-			_result << ' ' << command.second;
-
-			if (!command.third.empty())
-			{
-				_result << ' ' << command.third;
-			}
-		}
-		_result << endl;
-	}
-
-	return _result.str();
+	return parseCommands();
 }
 
 void Compiler::removeWhitespaces(string& code)
@@ -38,101 +19,110 @@ void Compiler::removeWhitespaces(string& code)
 	code.erase(end, code.end());
 }
 
-vector<string>* Compiler::tokenize(string& code)
+void Compiler::tokenize(string& code)
 {
-	auto tokens = new vector<string>();
 	auto leftIt = code.begin();
-
 	for (auto rightIt = code.begin(); rightIt != code.end(); ++rightIt)
 	{
 		if (isLexeme(*rightIt))
 		{
 			if (leftIt != rightIt)
 			{
-				tokens->push_back(string(leftIt, rightIt));
+				tokens.push_back(string(leftIt, rightIt));
 			}
-			tokens->push_back(string(1, *rightIt));
+			tokens.push_back(string(1, *rightIt));
 			leftIt = rightIt;
 			++leftIt;
 		}
 	}
-
-	return tokens;
 }
 
-void Compiler::handleBlock(tokenIt begin, tokenIt end)
+void Compiler::handleBlock(int leftIndex, int rightIndex)
 {
-	static int innerFunc = 0;
-
-	for (auto it = begin; it != end; ++it)
+	for (int i = leftIndex; i < rightIndex; i++)
 	{
-		string tokenValue = *it;
-
-		if (tokenValue == "read" || tokenValue == "write")
+		string token = tokens[i];
+		if (token == "read" || token == "write")
 		{
-			// skip '>' and read/write variable
-			it += 2;
-			transform(tokenValue.begin(), tokenValue.end(), tokenValue.begin(), ::toupper);
-			addCommand(Command(tokenValue, *it));
+			transform(token.begin(), token.end(), token.begin(), ::toupper);
+			addCommand(Command(token, tokens[i + 2]));
+			i += 3;
 		}
-		else if (*(it + 1) == "=")
+		else if (tokens[i + 1] == "=")
 		{
-			auto endExpression = getTokenFrom(it, ";");
-			handleExpression(it + 2, endExpression, *it);
-			it = endExpression;
+			int endExpression = getTokenFrom(i, ";");
+			handleExpression(i + 2, endExpression, tokens[i]);
+			i = endExpression;
 		}
-		else if (tokenValue == "if")
+		else if (token == "if" || token == "while")
 		{
-			string resultVariable = handleExpression(it + 2, getTokenFrom(it, "]"));
+			int beginStatementIndex = lineIndex;
 
-			int beginIfIndex = lineIndex;
+			addCommand(Command("GOTOIFNOT", handleStatementExpression(i + 2), "-"));
 
-			it = getTokenFrom(it, "{") + 1;
-			auto endBlock = getTokenFrom(it, "}");
-			
-			innerFunc++;
-			handleBlock(it, endBlock);
-			innerFunc--;
+			i = getTokenFrom(i, "{");
+			int endStatementIndex = getClosedBracket(i);
+			handleBlock(i, endStatementIndex);
+			i = endStatementIndex;
 
-			result.insert(result.begin() + beginIfIndex, Command("GOTOIFNOT", resultVariable, to_string(lineIndex + 1)));
-			lineIndex++;
-			it = endBlock;
-		}
-		else if (tokenValue == "while")
-		{
-			auto endExpression = getTokenFrom(it, "]");
+			if (token == "while")
+			{
+				addCommand(Command("GOTO", to_string(beginStatementIndex)));
+			}
 
-			string resultVariable = handleExpression(it + 2, endExpression);
-
-			it = endExpression;
-			auto endBlock = getTokenFrom(it, "}");
-
-			int beginWhileIndex = lineIndex;
-
-			handleBlock(it + 2, endBlock);
-
-			result.insert(result.begin() + beginWhileIndex, Command("GOTOIFNOT", resultVariable, to_string(lineIndex + 2)));
-			lineIndex++;
-
-			addCommand(Command("GOTO", to_string(beginWhileIndex)));
-
-			it = endBlock;
+			(result.begin() + beginStatementIndex)->second = to_string(lineIndex);
 		}
 	}
 }
 
-string Compiler::handleExpression(Compiler::tokenIt begin, Compiler::tokenIt end, const string& lastVariable)
+string Compiler::parseCommands()
 {
-	if (distance(begin, end) == 1)
+	int index = 0;
+	for (Command& command : result)
 	{
-		string resultVariable = lastVariable.empty() ? "t" + to_string(tempCount++) : lastVariable;
-		addCommand(Command("COPY", *begin, resultVariable));
-		return lastVariable;
+		cout << index << ":\t" << command.op << ' ' << command.first;
+		if (!command.second.empty())
+		{
+			cout << ' ' << command.second;
+			if (!command.third.empty())
+			{
+				cout << ' ' << command.third;
+			}
+		}
+		cout << endl;
+		index++;
 	}
 
-	for (auto it = begin; it != end; ++it)
+	stringstream resStream;
+	for (Command& command : result)
 	{
-		string token = *it;
+		resStream << command.op << ' ' << command.first;
+		if (!command.second.empty())
+		{
+			resStream << ' ' << command.second;
+			if (!command.third.empty())
+			{
+				resStream << ' ' << command.third;
+			}
+		}
+		resStream << endl;
+	}
+
+	return resStream.str();
+}
+
+string Compiler::handleExpression(int leftIndex, int rightIndex, const string& lastVar)
+{
+	if (rightIndex - leftIndex == 1)
+	{
+		string resultVariable = lastVar.empty() ? "t" + to_string(tempCount++) : lastVar;
+		addCommand(Command("COPY", tokens[leftIndex], resultVariable));
+		return lastVar;
+	}
+
+	for (int i = leftIndex; i < rightIndex; i++)
+	{
+		string token = tokens[i];
 
 		if (isNumberOrVariable(token))
 		{
@@ -170,19 +160,32 @@ string Compiler::handleExpression(Compiler::tokenIt begin, Compiler::tokenIt end
 	}
 
 	Command& lastCommand = result.back();
-	if (!lastVariable.empty())
+	if (!lastVar.empty())
 	{
-		lastCommand.third = lastVariable;
+		lastCommand.third = lastVar;
 	}
 
 	return lastCommand.third;
 }
 
+string Compiler::handleStatementExpression(int i)
+{
+	int endExp = getTokenFrom(i, "]");
+	if (endExp - i != 1)
+	{
+		return handleExpression(i, endExp);
+	}
+	else
+	{
+		return tokens[i];
+	}
+}
+
 void Compiler::generateCommand()
 {
-	string op = operators.top(); operators.pop();
-	string rhs = args.top(); args.pop();
-	string lhs = args.top(); args.pop();
+	string op =  operators.top(); operators.pop();
+	string rhs = args.top();      args.pop();
+	string lhs = args.top();      args.pop();
 
 	string resultVariable = "t" + to_string(tempCount++);
 	addCommand(Command(numberCommand[op], lhs, rhs, resultVariable));
@@ -195,9 +198,42 @@ void Compiler::addCommand(Command command)
 	lineIndex++;
 }
 
-bool Compiler::isLexeme(char symbol)
+int Compiler::getTokenFrom(int i, string token)
 {
-	return find(lexemes.begin(), lexemes.end(), symbol) != lexemes.end();
+	int shift = 0;
+	while (tokens[i + shift] != token)
+	{
+		shift++;
+	}
+	return i + shift;
+}
+
+int Compiler::getClosedBracket(int i)
+{
+	int shift = 1;
+	int bracketsToClose = 1;
+	while (true)
+	{
+		string token = tokens[i + shift];
+		if (token == "}")
+		{
+			bracketsToClose--;
+			if (bracketsToClose == 0)
+			{
+				return i + shift;
+			}
+		}
+		else if (token == "{")
+		{
+			bracketsToClose++;
+		}
+		shift++;
+	}
+}
+
+bool Compiler::isOperator(string& token)
+{
+	return numberCommand.count(token) == 1;
 }
 
 bool Compiler::isNumberOrVariable(const string& value)
@@ -207,6 +243,7 @@ bool Compiler::isNumberOrVariable(const string& value)
 		if ((symbol < '0' || symbol > '9') && symbol != '.')
 		{
 			isNumber = false;
+			break;
 		}
 
 	if (isNumber)
@@ -223,17 +260,7 @@ bool Compiler::isNumberOrVariable(const string& value)
 	return true;
 }
 
-bool Compiler::isOperator(string& token)
+bool Compiler::isLexeme(char symbol)
 {
-	return numberCommand.count(token) == 1;
-}
-
-Compiler::tokenIt Compiler::getTokenFrom(Compiler::tokenIt it, string terminator)
-{
-	int shift = 1;
-	while (*(it + shift) != terminator)
-	{
-		shift++;
-	}
-	return it + shift;
+	return find(lexemes.begin(), lexemes.end(), symbol) != lexemes.end();
 }

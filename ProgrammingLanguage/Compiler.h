@@ -29,8 +29,7 @@ private:
 		}
 	};
 
-	typedef string::iterator stringIt;
-	typedef vector<string>::iterator tokenIt;
+	typedef vector<Command>::iterator commandIt;
 
 	vector<char> lexemes =
 	{
@@ -43,18 +42,21 @@ private:
 	int tempCount = 0;
 
 	vector<Command> result;
+	vector<string> tokens;
 
 	stack<string> args;
 	stack<string> operators;
 
-	map<string, string> numberCommand {
+	map<string, string> numberCommand
+	{
 			{"+", "ADD"},
 			{"-", "SUB"},
 			{"*", "MUL"},
 			{"/", "DIV"},
 	};
 
-	map<string, int> priority {
+	map<string, int> priority
+	{
 			{"+", 1},
 			{"-", 1},
 			{"*", 2},
@@ -64,26 +66,31 @@ private:
 
 	void removeWhitespaces(string& code);
 
-	vector<string>* tokenize(string& code);
+	void tokenize(string& code);
 
-	void handleBlock(tokenIt begin, tokenIt end);
+	void handleBlock(int leftIndex, int rightIndex);
 
-	string handleExpression(tokenIt begin, tokenIt end, const string& lastVariable = "");
+	string parseCommands();
+
+	string handleExpression(int leftIndex, int rightIndex, const string& lastVar = "");
+
+	string handleStatementExpression(int i);
 
 	void generateCommand();
 
 	void addCommand(Command command);
 
-	bool isLexeme(char symbol);
+	int getTokenFrom(int i, string token);
+
+	int getClosedBracket(int i);
+
+	bool isOperator(string& token);
 
 	bool isNumberOrVariable(const string& variable);
 
-	bool isOperator(string& token);
-	
-	tokenIt getTokenFrom(tokenIt it, string terminator);
+	bool isLexeme(char symbol);
 
 public:
-
 	string compile(string code);
 };
 
