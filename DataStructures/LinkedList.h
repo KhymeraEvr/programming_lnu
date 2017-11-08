@@ -12,10 +12,55 @@ private:
 	{
 		T value;
 		Node* next;
+
+		Node()
+		{
+			next = nullptr;
+		}
 	};
 
 	Node* root;
 	Node* current;
+
+	class LinkedListIterator : public iterator<LinkedList, T>
+	{
+		Node* node;
+
+	public:
+		LinkedListIterator(Node* node) : node(node)
+		{
+		}
+
+		LinkedListIterator& operator= (const LinkedListIterator& iterator)
+		{
+			this->node = iterator.node;
+			return *this;
+		}
+
+		bool operator== (const LinkedListIterator& iterator)
+		{
+			return this->node == iterator.node;
+		}
+
+		bool operator!= (const LinkedListIterator& iterator)
+		{
+			return !operator==(iterator);
+		}
+
+		T& operator* ()
+		{
+			return node->value;
+		}
+
+		LinkedListIterator& operator++ ()
+		{
+			if (node->next != nullptr)
+			{
+				node = node->next;
+			}
+			return *this;
+		}
+	};
 
 public:
 	LinkedList()
@@ -101,12 +146,7 @@ public:
 			second = second->next;
 		}
 
-		if (first->next == second->next)
-		{
-			return true;
-		}
-
-		return false;
+		return first->next == second->next;
 	}
 
 	void prettyPrint(ostream& out)
@@ -136,6 +176,16 @@ public:
 			(*alter)(walk->value);
 			walk = walk->next;
 		}
+	}
+
+	LinkedListIterator begin()
+	{
+		return LinkedListIterator(root);
+	}
+
+	LinkedListIterator end()
+	{
+		return LinkedListIterator(current);
 	}
 };
 
