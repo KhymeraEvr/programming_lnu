@@ -50,6 +50,7 @@ double VirtualMachine::getVariable(string variable)
 	}
 	else
 	{
+		variable = setIndexIfArray(variable);
 		auto variableIterator = variables.find(variable);
 		if (variableIterator == variables.end())
 		{
@@ -57,9 +58,26 @@ double VirtualMachine::getVariable(string variable)
 		}
 		else
 		{
-			return (*variableIterator).second;
+			return variableIterator->second;
 		}
 	}
+}
+
+void VirtualMachine::setVariable(string variable, double value)
+{
+	variable = setIndexIfArray(variable);
+	variables[variable] = value;
+}
+
+string VirtualMachine::setIndexIfArray(string variable)
+{
+	auto arrayIndex = variable.find('#');
+	if (arrayIndex != string::npos)
+	{
+		int index = static_cast<int>(getVariable(variable.substr(arrayIndex + 1)));
+		return variable.substr(0, arrayIndex) + '#' + to_string(index);
+	}
+	return variable;
 }
 
 bool isNumber(string& value)

@@ -25,9 +25,9 @@ private:
 							"READ",
 							[this](vector<string> params)
 							{
-								double variable;
-								cin >> variable;
-								variables[params[0]] = variable;
+								double value;
+								cin >> value;
+								setVariable(params[0], value);
 							}
 					},
 					{
@@ -43,7 +43,7 @@ private:
 							{
 								double a = getVariable(params[0]);
 								double b = getVariable(params[1]);
-								variables[params[2]] = a + b;
+								setVariable(params[2], a + b);
 							}
 					},
 					{
@@ -52,7 +52,7 @@ private:
 							{
 								double a = getVariable(params[0]);
 								double b = getVariable(params[1]);
-								variables[params[2]] = a - b;
+								setVariable(params[2], a - b);
 							}
 					},
 					{
@@ -61,7 +61,7 @@ private:
 							{
 								double a = getVariable(params[0]);
 								double b = getVariable(params[1]);
-								variables[params[2]] = a / b;
+								setVariable(params[2], a / b);
 							}
 					},
 					{
@@ -70,7 +70,7 @@ private:
 							{
 								double a = getVariable(params[0]);
 								double b = getVariable(params[1]);
-								variables[params[2]] = a * b;
+								setVariable(params[2], a * b);
 							}
 					},
 					{
@@ -107,7 +107,7 @@ private:
 							[this](vector<string> params)
 							{
 								double value = getVariable(params[0]);
-								variables[params[1]] = value;
+								setVariable(params[1], value);
 							}
 					}
 			};
@@ -118,6 +118,10 @@ private:
 	void executeSteps();
 
 	double getVariable(string);
+
+	void setVariable(string, double);
+
+	string setIndexIfArray(string variable);
 
 public:
 	void run(string);

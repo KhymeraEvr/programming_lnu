@@ -50,7 +50,7 @@ void Compiler::handleBlock(int leftIndex, int rightIndex)
 		}
 		else if (tokens[i + 1] == "=")
 		{
-			int endExpression = getTokenFrom(i, ";");
+			int endExpression = indexOfFrom(i, ";");
 			handleExpression(i + 2, endExpression, tokens[i]);
 			i = endExpression;
 		}
@@ -60,7 +60,7 @@ void Compiler::handleBlock(int leftIndex, int rightIndex)
 
 			addCommand(Command("GOTOIFNOT", handleStatementExpression(i + 2), "-"));
 
-			i = getTokenFrom(i, "{");
+			i = indexOfFrom(i, "{");
 			int endStatementIndex = getClosedBracket(i);
 			handleBlock(i, endStatementIndex);
 			i = endStatementIndex;
@@ -170,7 +170,7 @@ string Compiler::handleExpression(int leftIndex, int rightIndex, const string& l
 
 string Compiler::handleStatementExpression(int i)
 {
-	int endExp = getTokenFrom(i, "]");
+	int endExp = indexOfFrom(i, "]");
 	if (endExp - i != 1)
 	{
 		return handleExpression(i, endExp);
@@ -183,9 +183,9 @@ string Compiler::handleStatementExpression(int i)
 
 void Compiler::generateCommand()
 {
-	string op =  operators.top(); operators.pop();
-	string rhs = args.top();      args.pop();
-	string lhs = args.top();      args.pop();
+	string op = operators.top(); operators.pop();
+	string rhs = args.top();     args.pop();
+	string lhs = args.top();     args.pop();
 
 	string resultVariable = "t" + to_string(tempCount++);
 	addCommand(Command(numberCommand[op], lhs, rhs, resultVariable));
@@ -198,7 +198,7 @@ void Compiler::addCommand(Command command)
 	lineIndex++;
 }
 
-int Compiler::getTokenFrom(int i, string token)
+int Compiler::indexOfFrom(int i, string token)
 {
 	int shift = 0;
 	while (tokens[i + shift] != token)
@@ -238,29 +238,13 @@ bool Compiler::isOperator(string& token)
 
 bool Compiler::isNumberOrVariable(const string& value)
 {
-	bool isNumber = true;
-	for (char symbol : value)
-		if ((symbol < '0' || symbol > '9') && symbol != '.')
-		{
-			isNumber = false;
-			break;
-		}
-
-	if (isNumber)
-	{
-		return true;
-	}
-
-	for (char symbol : value)
-		if (!::isalpha(symbol))
-		{
-			return false;
-		}
-
-	return true;
+	return
+			regex_match(value, regex(R"(\d+(.\d+)?)"))
+			? true
+			: regex_match(value, regex(R"((\w|\d)+(#((\w+\d*)|(\d+)))?)"));
 }
 
 bool Compiler::isLexeme(char symbol)
 {
-	return find(lexemes.begin(), lexemes.end(), symbol) != lexemes.end();
+	return string(">;=+-*/(){}[]").find(symbol) != string::npos;
 }

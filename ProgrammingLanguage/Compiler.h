@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #include <stack>
+#include <regex>
 #include <utility>
 #include <vector>
 #include <map>
@@ -27,15 +28,6 @@ private:
 				: op(move(op)), first(move(first)), second(move(second)), third(move(third))
 		{
 		}
-	};
-
-	typedef vector<Command>::iterator commandIt;
-
-	vector<char> lexemes =
-	{
-			'>', ';', '=', '+', '-',
-			'*', '/', '(', ')', '{',
-			'}', '[', ']',
 	};
 
 	int lineIndex = 0;
@@ -80,7 +72,7 @@ private:
 
 	void addCommand(Command command);
 
-	int getTokenFrom(int i, string token);
+	int indexOfFrom(int i, string token);
 
 	int getClosedBracket(int i);
 
