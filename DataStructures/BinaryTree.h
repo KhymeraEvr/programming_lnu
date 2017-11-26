@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <queue>
+
+#include "miterator.h"
 
 using namespace std;
 
@@ -13,25 +16,27 @@ enum NodeType
 	RIGHT
 };
 
-template<typename T> class BinaryTree
+template<typename T>
+class BinaryTree
 {
 private:
-	static const char FILLER = ' ';
-	static const char UNDERLINE = '_';
-	static const char LEFT_BRANCH = '/';
-	static const char RIGHT_BRANCH = '\\';
-
 	struct Node
 	{
 		T value;
 		int shift;
 		Node* left;
 		Node* right;
+		Node* parent;
 
-		Node(int value) : value(value), left(nullptr), right(nullptr), shift(0)
+		Node(int value, Node* parent) : value(value), left(nullptr), right(nullptr), parent(parent), shift(0)
 		{
 		}
 	};
+
+	static const char FILLER = ' ';
+	static const char UNDERLINE = '_';
+	static const char LEFT_BRANCH = '/';
+	static const char RIGHT_BRANCH = '\\';
 
 	Node* root;
 
@@ -41,7 +46,7 @@ private:
 		{
 			if (node->right == nullptr)
 			{
-				node->right = new Node(value);
+				node->right = new Node(value, node);
 			}
 			else
 			{
@@ -52,7 +57,7 @@ private:
 		{
 			if (node->left == nullptr)
 			{
-				node->left = new Node(value);
+				node->left = new Node(value, node);
 			}
 			else
 			{
@@ -70,7 +75,8 @@ private:
 		return node;
 	}
 
-	Node* remove(Node* node, int value) {
+	Node* remove(Node* node, int value)
+	{
 		if (node == nullptr)
 		{
 			return node;
@@ -85,19 +91,22 @@ private:
 		}
 		else
 		{
-			if (node->left == nullptr && node->right == nullptr) {
+			if (node->left == nullptr && node->right == nullptr)
+			{
 				delete node;
 				node = nullptr;
 			}
 			else if (node->left == nullptr)
 			{
-				Node *temp = node;
+				Node* temp = node;
+				node->right->parent = node->parent;
 				node = node->right;
 				delete temp;
 			}
 			else if (node->right == nullptr)
 			{
 				Node* temp = node;
+				node->left->parent = node->parent;
 				node = node->left;
 				delete temp;
 			}
@@ -105,11 +114,14 @@ private:
 			{
 				Node* temp = findMin(node->right);
 				node->value = temp->value;
-				node->right = remove(node->right, temp->value);
+				Node* rightNode = remove(node->right, temp->value);
+				rightNode->parent = node;
+				node->right = rightNode;
 			}
 		}
 		return node;
 	}
+
 
 	void removeSubtree(Node* node)
 	{
@@ -251,6 +263,77 @@ private:
 
 #pragma endregion
 
+	class BinaryTreeIterator : public miterator<BinaryTree, T>
+	{
+		Node* node;
+
+	public:
+		explicit BinaryTreeIterator(Node* node) : node(node)
+		{
+		}
+
+		miterator<BinaryTree, T>& operator=(const miterator<BinaryTree, T>& iterator) override
+		{
+			node = ((BinaryTreeIterator&)iterator).node;
+		}
+
+		bool operator==(const miterator<BinaryTree, T>& iterator) override
+		{
+			return node == ((BinaryTreeIterator&)iterator).node;
+		}
+
+		bool operator!=(const miterator<BinaryTree, T>& iterator) override
+		{
+			return !operator==(iterator);
+		}
+
+		T operator*() const override
+		{
+			return node->value;
+		}
+
+		miterator<BinaryTree, T>& operator++() override
+		{
+			if (this->node == nullptr)
+			{
+				return *this;
+			}
+
+			Node* parent = this->node->parent;
+
+			if (parent == nullptr)
+			{
+				this->node = nullptr;
+				return *this;
+			}
+
+			if ((this->node == parent->left) && (parent->right != nullptr))
+			{
+				this->node = parent->right;
+			}
+			else
+			{
+				this->node = this->node->parent;
+				return *this;
+			}
+			while (true)
+			{
+				if (this->node->left != nullptr)
+				{
+					this->node = this->node->left;
+				}
+				else if (this->node->right != nullptr)
+				{
+					this->node = this->node->right;
+				}
+				else
+				{
+					return *this;
+				}
+			}
+		}
+	};
+
 public:
 	BinaryTree()
 	{
@@ -265,7 +348,7 @@ public:
 	{
 		if (root == nullptr)
 		{
-			root = new Node(value);
+			root = new Node(value, nullptr);
 		}
 		else
 		{
@@ -367,5 +450,15 @@ public:
 			}
 			out << endl;
 		}
+	}
+
+	miterator<BinaryTree, T>& begin()
+	{
+		return (miterator<BinaryTree, T> &)*new BinaryTreeIterator(findMin(root));
+	}
+
+	miterator<BinaryTree, T>& end()
+	{
+		return (miterator<BinaryTree, T> &)*new BinaryTreeIterator(nullptr);
 	}
 };

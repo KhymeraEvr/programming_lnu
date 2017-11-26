@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "miterator.h"
+
 using namespace std;
 
 template<typename T> class LinkedList
@@ -22,37 +24,38 @@ private:
 	Node* root;
 	Node* current;
 
-	class LinkedListIterator : public iterator<LinkedList, T>
+public:
+	class LinkedListIterator : public miterator<LinkedList, T>
 	{
 		Node* node;
 
 	public:
-		LinkedListIterator(Node* node) : node(node)
+		explicit LinkedListIterator(Node* node) : node(node)
 		{
 		}
 
-		LinkedListIterator& operator= (const LinkedListIterator& iterator)
+		miterator<LinkedList, T>& operator= (const miterator<LinkedList, T>& iterator) override
 		{
-			this->node = iterator.node;
+			this->node = ((LinkedListIterator&)iterator).node;
 			return *this;
 		}
 
-		bool operator== (const LinkedListIterator& iterator)
+		bool operator== (const miterator<LinkedList, T>& iterator) override
 		{
-			return this->node == iterator.node;
+			return this->node == ((LinkedListIterator&)iterator).node;
 		}
 
-		bool operator!= (const LinkedListIterator& iterator)
+		bool operator!= (const miterator<LinkedList, T>& iterator) override
 		{
 			return !operator==(iterator);
 		}
 
-		T& operator* ()
+		T operator* () const override
 		{
 			return node->value;
 		}
 
-		LinkedListIterator& operator++ ()
+		miterator<LinkedList, T>& operator++() override
 		{
 			if (node->next != nullptr)
 			{
@@ -62,7 +65,6 @@ private:
 		}
 	};
 
-public:
 	LinkedList()
 	{
 		root = new Node();
@@ -178,14 +180,14 @@ public:
 		}
 	}
 
-	LinkedListIterator begin()
+	miterator<LinkedList, T>& begin()
 	{
-		return LinkedListIterator(root);
+		return (miterator<LinkedList, T>&)*new LinkedListIterator(root);
 	}
 
-	LinkedListIterator end()
+	miterator<LinkedList, T>& end()
 	{
-		return LinkedListIterator(current);
+		return (miterator<LinkedList, T>&)*new LinkedListIterator(current);
 	}
 };
 
